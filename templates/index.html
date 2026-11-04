@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Gemini Visual Lens</title>
+  <!-- Google Fonts: Inter for crisp, accessible readability -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-icon">👁️</span>
+        <div>
+          <h1 class="brand-title">Gemini Visual Lens</h1>
+          <p class="brand-subtitle">Spatial Computer-Vision Assistant</p>
+        </div>
+      </div>
+      <div class="header-controls">
+        <a href="/download" class="icon-button" title="Download Android App &amp; QR Code" aria-label="Download Android App" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">
+          📲
+        </a>
+        <button id="switchCameraBtn" class="icon-button" title="Switch Camera" aria-label="Switch Camera">
+          🔄
+        </button>
+      </div>
+    </header>
+
+    <!-- Missing API Key Alert Banner -->
+    {% if not api_configured %}
+    <div id="apiKeyBanner" class="alert-banner warning-banner">
+      <div class="banner-icon">⚠️</div>
+      <div class="banner-content">
+        <strong>Gemini API Key Required</strong>
+        <p>Please paste your API key into the <code>.env</code> file (<code>GEMINI_API_KEY=...</code>) and restart the server.</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Error Display Banner -->
+    <div id="errorBanner" class="alert-banner error-banner hidden" role="alert">
+      <div class="banner-icon">❌</div>
+      <div class="banner-content">
+        <strong id="errorTitle">Notice</strong>
+        <p id="errorMessage">An error occurred.</p>
+      </div>
+      <button id="dismissErrorBtn" class="dismiss-btn" aria-label="Dismiss error">✕</button>
+    </div>
+
+    <!-- Urgent Hazard Alert Banner -->
+    <div id="hazardBanner" class="alert-banner hazard-banner hidden" role="alert" aria-live="assertive">
+      <div class="banner-icon">🚨</div>
+      <div class="banner-content">
+        <strong id="hazardTitle">Hazard Alert</strong>
+        <p id="hazardMessage">Obstacle detected in your immediate path.</p>
+      </div>
+    </div>
+
+    <!-- Target Finding Active Banner -->
+    <div id="targetSearchBanner" class="alert-banner target-banner hidden" role="status" aria-live="polite">
+      <div class="banner-icon">🎯</div>
+      <div class="banner-content">
+        <strong id="targetSearchTitle">Searching for Target</strong>
+        <p id="targetSearchStatus">Scanning camera view...</p>
+      </div>
+      <button id="cancelTargetBtn" class="dismiss-btn" title="Cancel search" aria-label="Cancel search">✕</button>
+    </div>
+
+    <!-- Live Viewfinder Section -->
+    <section class="camera-section">
+      <div class="viewfinder-container">
+        <!-- Live Video Element -->
+        <video id="cameraVideo" autoplay playsinline muted></video>
+        
+        <!-- Hidden Canvas for Frame Capture -->
+        <canvas id="captureCanvas" class="hidden"></canvas>
+        
+        <!-- Viewfinder Overlay & Scan Animation -->
+        <div class="viewfinder-overlay">
+          <div class="corner top-left"></div>
+          <div class="corner top-right"></div>
+          <div class="corner bottom-left"></div>
+          <div class="corner bottom-right"></div>
+          <div id="scanLine" class="scan-line hidden"></div>
+          
+          <!-- Directional Guidance Radar & Reticle -->
+          <div class="center-reticle" id="centerReticle"></div>
+          <div id="leftGuideArrow" class="guide-arrow guide-left hidden">◀ PAN LEFT</div>
+          <div id="rightGuideArrow" class="guide-arrow guide-right hidden">PAN RIGHT ▶</div>
+          <div id="targetLockedPill" class="target-locked-pill hidden">🎯 TARGET CENTERED</div>
+        </div>
+
+        <!-- Camera Permission Prompt / Placeholder -->
+        <div id="cameraPlaceholder" class="camera-placeholder hidden">
+          <div class="placeholder-icon">📷</div>
+          <p id="cameraStatusText">Requesting camera access...</p>
+          <button id="grantCameraBtn" class="btn btn-secondary">Enable Camera</button>
+        </div>
+
+        <!-- Status Pill -->
+        <div class="status-pill" id="statusPill">
+          <span class="status-dot ready"></span>
+          <span id="statusText">Camera Active</span>
+        </div>
+
+        <!-- Continuous Mode Pill -->
+        <div id="continuousModeBadge" class="continuous-badge hidden">
+          <span class="pulse-ring"></span>
+          <span>⚡ Continuous Guidance</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Primary Action Controls -->
+    <section class="controls-section">
+      <!-- Voice First Interaction Button -->
+      <button id="voiceBtn" class="btn btn-voice btn-large" aria-label="Start Voice Command">
+        <span class="btn-icon voice-icon" id="voiceIcon">🎙️</span>
+        <span class="btn-text" id="voiceBtnText">Tap &amp; Speak</span>
+        <span class="voice-wave hidden" id="voiceWave"></span>
+      </button>
+
+      <!-- Action Button Row -->
+      <div class="action-btn-row">
+        <!-- Continuous Guidance Toggle -->
+        <button id="continuousGuidanceBtn" class="btn btn-guidance" aria-label="Toggle Continuous Spatial Guidance">
+          <span class="btn-icon" id="guidanceIcon">🧭</span>
+          <span id="guidanceBtnText">Start Guidance</span>
+        </button>
+
+        <!-- Manual Single Capture Button -->
+        <button id="captureBtn" class="btn btn-primary" aria-label="Capture and Analyze Scene">
+          <span class="btn-icon">📸</span>
+          <span class="btn-text">Capture</span>
+        </button>
+      </div>
+
+      <!-- Text / Quick Query Input Bar (Voice fallback & manual questions) -->
+      <form id="queryForm" class="query-input-form" onsubmit="return false;">
+        <div class="query-input-wrapper">
+          <input
+            type="text"
+            id="queryInput"
+            class="query-input"
+            placeholder="Ask anything or 'Find my keys'..."
+            aria-label="Voice command or custom query"
+            autocomplete="off"
+          />
+          <button type="submit" id="sendQueryBtn" class="btn-send-query" title="Submit query" aria-label="Submit query">
+            <span>➤</span>
+          </button>
+        </div>
+        <!-- Quick Action Suggestion Chips -->
+        <div class="quick-chips-row">
+          <button type="button" class="quick-chip" data-cmd="What do you see?">👁️ Describe</button>
+          <button type="button" class="quick-chip" data-cmd="Find my keys">🔑 Find Keys</button>
+          <button type="button" class="quick-chip" data-cmd="Find my water bottle">💧 Find Bottle</button>
+          <button type="button" class="quick-chip" data-cmd="Read this text">📖 Read Text</button>
+          <button type="button" class="quick-chip" data-cmd="Is path clear?">🚶 Check Path</button>
+        </div>
+      </form>
+
+      <div class="sub-controls">
+        <label class="toggle-control" title="Enable hands-free zero-tap continuous voice loop">
+          <input type="checkbox" id="zeroTapToggle" checked>
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">Zero-Tap Mode</span>
+        </label>
+        <label class="toggle-control" title="Automatically speak results when analysis finishes">
+          <input type="checkbox" id="autoSpeakToggle" checked>
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">Auto-Speak</span>
+        </label>
+        <label class="toggle-control" title="Enable spatial audio tone cues when centering objects">
+          <input type="checkbox" id="audioBeaconToggle" checked>
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">Audio Beacon</span>
+        </label>
+        <span id="voiceEngineBadge" class="badge">Voice: Ready</span>
+      </div>
+    </section>
+
+    <!-- Voice Command Feedback Card -->
+    <div id="voiceCommandCard" class="voice-feedback-card hidden" role="status" aria-live="polite">
+      <div class="voice-feedback-header">
+        <span class="voice-pulse-dot" id="voicePulseDot"></span>
+        <span class="voice-feedback-title" id="voiceFeedbackTitle">Listening...</span>
+      </div>
+      <p id="voiceCommandText" class="voice-command-text">Say &quot;Find my keys&quot;, &quot;What do you see?&quot;, or &quot;Start guidance&quot;</p>
+    </div>
+
+    <!-- Response / Scene Description Section (Written AI Output) -->
+    <section id="resultsSection" class="results-section" aria-live="polite">
+      <div class="card result-card">
+        <div class="card-header">
+          <h2 class="card-title">Scene Summary</h2>
+          <div class="card-badges">
+            <span id="processingTimeBadge" class="badge">-- ms</span>
+          </div>
+        </div>
+
+        <!-- Actionable Spatial Guidance Banner -->
+        <div id="guidanceCard" class="guidance-direction-box hidden">
+          <span class="guidance-icon">🧭</span>
+          <div class="guidance-content">
+            <span class="guidance-label">Spatial Guidance</span>
+            <p id="guidanceDirectionText" class="guidance-direction-text"></p>
+          </div>
+        </div>
+
+        <!-- Spoken Natural Language Description -->
+        <div class="summary-box">
+          <p id="spokenSummary" class="spoken-summary-text">
+            No analysis yet. Point the camera and tap &quot;Capture&quot; or say a voice command.
+          </p>
+        </div>
+
+        <!-- Speech Synthesis Controls -->
+        <div class="tts-controls">
+          <button id="speakBtn" class="btn btn-action" aria-label="Speak response aloud">
+            <span class="btn-icon" id="speakBtnIcon">🔊</span>
+            <span id="speakBtnText">Speak Response</span>
+          </button>
+          <button id="stopSpeakBtn" class="btn btn-outline hidden" aria-label="Stop speech">
+            ⏹️ Stop
+          </button>
+        </div>
+
+        <!-- Uncertainty Warning if present -->
+        <div id="uncertaintyCard" class="uncertainty-box hidden">
+          <span class="uncertainty-icon">⚠️</span>
+          <span id="uncertaintyText"></span>
+        </div>
+
+        <!-- Structured Objects Breakdown -->
+        <div class="objects-section">
+          <h3 class="objects-heading">Detected Objects &amp; Clock Directions</h3>
+          <div id="objectsList" class="objects-grid">
+            <!-- Populated dynamically via JavaScript -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Gemini Visual Lens • Python FastAPI + Google GenAI SDK</p>
+    </footer>
+  </div>
+
+  <!-- Minimal JavaScript for Camera & API Communication -->
+  <script src="/static/camera.js"></script>
+</body>
+</html>

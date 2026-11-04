@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Download Vision Lens • AI Visual Assistant</title>
+  <meta name="description" content="Download the Vision Lens Android App or launch the live Web App for AI-powered real-time spatial computer vision and voice guidance.">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    /* Dedicated Styles for Download Portal */
+    .download-container {
+      width: 100%;
+      max-width: 680px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px 40px;
+      gap: 24px;
+      margin: 0 auto;
+    }
+
+    .hero-section {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 8px 8px;
+    }
+
+    .app-icon-badge {
+      font-size: 3.5rem;
+      width: 88px;
+      height: 88px;
+      background: linear-gradient(145deg, #1e2433, #141822);
+      border: 2px solid var(--border-active, #4a5568);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(0, 240, 255, 0.15), 0 0 20px rgba(255, 183, 3, 0.1);
+      margin-bottom: 4px;
+    }
+
+    .hero-title {
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: #ffffff;
+      line-height: 1.15;
+    }
+
+    .hero-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-secondary, #a0aec0);
+      max-width: 460px;
+      line-height: 1.5;
+    }
+
+    .version-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(6, 214, 160, 0.12);
+      color: #06d6a0;
+      border: 1px solid rgba(6, 214, 160, 0.35);
+      border-radius: 9999px;
+      padding: 5px 14px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .version-pill::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      background-color: #06d6a0;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #06d6a0;
+    }
+
+    /* Actions Grid */
+    .download-actions-card {
+      background: var(--bg-card, #161c28);
+      border: 1px solid var(--border-subtle, #2d3748);
+      border-radius: var(--radius-lg, 20px);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .btn-action-large {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-radius: 16px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      text-decoration: none;
+      text-align: center;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-action-large:active {
+      transform: scale(0.98);
+    }
+
+    .btn-download-apk {
+      background: linear-gradient(135deg, #00f0ff 0%, #0077b6 100%);
+      color: #0a0c10;
+      box-shadow: 0 6px 20px rgba(0, 240, 255, 0.3);
+    }
+
+    .btn-download-apk:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 8px 26px rgba(0, 240, 255, 0.45);
+    }
+
+    .btn-open-web {
+      background: linear-gradient(135deg, #ffb703 0%, #fb8500 100%);
+      color: #0a0c10;
+      box-shadow: 0 6px 20px rgba(255, 183, 3, 0.25);
+    }
+
+    .btn-open-web:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 8px 26px rgba(255, 183, 3, 0.4);
+    }
+
+    .button-subtext {
+      font-size: 0.8rem;
+      font-weight: 600;
+      opacity: 0.85;
+      display: block;
+    }
+
+    .note-box {
+      background: rgba(30, 36, 51, 0.6);
+      border-left: 3px solid #00f0ff;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.88rem;
+      color: var(--text-secondary, #a0aec0);
+      line-height: 1.45;
+    }
+
+    /* QR Code Section */
+    .qr-card {
+      background: var(--bg-card, #161c28);
+      border: 1px solid var(--border-subtle, #2d3748);
+      border-radius: var(--radius-lg, 20px);
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .qr-badge-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .qr-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-secondary, #a0aec0);
+      margin-top: -8px;
+    }
+
+    .qr-frame {
+      background: #ffffff;
+      padding: 14px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 228px;
+      height: 228px;
+    }
+
+    .qr-frame img, .qr-frame canvas {
+      display: block;
+      width: 200px !important;
+      height: 200px !important;
+    }
+
+    .qr-url-pill {
+      background: var(--bg-surface-elevated, #1e2433);
+      border: 1px solid var(--border-subtle, #2d3748);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      color: #00f0ff;
+      font-family: monospace;
+      word-break: break-all;
+      max-width: 90%;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .qr-url-pill:hover {
+      background: rgba(0, 240, 255, 0.1);
+    }
+
+    /* Highlights Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .feature-card {
+      background: var(--bg-surface, #141822);
+      border: 1px solid var(--border-subtle, #2d3748);
+      border-radius: var(--radius-md, 14px);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .feature-icon {
+      font-size: 1.5rem;
+    }
+
+    .feature-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .feature-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted, #718096);
+      line-height: 1.4;
+    }
+
+    /* Footer */
+    .download-footer {
+      text-align: center;
+      padding: 24px 12px 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted, #718096);
+      border-top: 1px solid var(--border-subtle, #2d3748);
+      margin-top: auto;
+    }
+
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: 1.85rem;
+      }
+      .download-actions-card {
+        padding: 18px 16px;
+      }
+      .qr-card {
+        padding: 22px 16px;
+      }
+      .qr-frame {
+        width: 208px;
+        height: 208px;
+      }
+      .qr-frame img, .qr-frame canvas {
+        width: 180px !important;
+        height: 180px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="download-container">
+    
+    <!-- Hero / Brand Section -->
+    <header class="hero-section">
+      <div class="app-icon-badge" aria-hidden="true">👁️</div>
+      <span class="version-pill">Android APK • v1.2.0 (Latest Release)</span>
+      <h1 class="hero-title">Vision Lens</h1>
+      <p class="hero-subtitle">
+        AI-powered spatial visual assistance with real-time text reading, continuous guidance, and conversational voice control.
+      </p>
+    </header>
+
+    <!-- Download & Web App Actions -->
+    <section class="download-actions-card" aria-label="Download and launch options">
+      <!-- APK Download Button -->
+      <a
+        href="/vision-lens.apk"
+        download="vision-lens.apk"
+        id="downloadApkBtn"
+        class="btn-action-large btn-download-apk"
+        aria-label="Download Android App APK v1.2.0"
+      >
+        <span style="font-size: 1.5rem;">📱</span>
+        <div>
+          <div>DOWNLOAD ANDROID APP</div>
+          <span class="button-subtext">Version 1.2.0 (Latest Release) • Direct Install APK</span>
+        </div>
+      </a>
+
+      <!-- Web App Launch Button -->
+      <a
+        href="/"
+        id="openWebAppBtn"
+        class="btn-action-large btn-open-web"
+        aria-label="Open Vision Lens Web Application"
+      >
+        <span style="font-size: 1.5rem;">🌐</span>
+        <div>
+          <div>OPEN WEB APP</div>
+          <span class="button-subtext">Live In-Browser Camera &amp; Voice Lens</span>
+        </div>
+      </a>
+
+      <!-- Notice note -->
+      <div class="note-box">
+        💡 <strong>For Android devices:</strong> Download the latest APK (v1.2.0) and install it on your device. Ensure &quot;Install from unknown sources&quot; is allowed in settings if prompted.
+      </div>
+    </section>
+
+    <!-- QR Code Section (Points to /download for Hackathon Posters) -->
+    <section class="qr-card" aria-label="Poster QR Code">
+      <h2 class="qr-badge-title">Scan to access Vision Lens</h2>
+      <p class="qr-subtitle">Web App + Android APK v1.2.0</p>
+
+      <div class="qr-frame" id="qrCodeContainer" title="QR Code pointing to download page">
+        <!-- Generated dynamically via Javascript canvas / image -->
+        <noscript>
+          <img
+            src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&amp;data=https://vision-lens.vercel.app/download"
+            alt="QR code to download page"
+            width="200"
+            height="200"
+          />
+        </noscript>
+      </div>
+
+      <div
+        class="qr-url-pill"
+        id="qrUrlPill"
+        title="Click to copy link"
+        onclick="copyDownloadUrl()"
+      >
+        <span id="qrUrlText">Loading link...</span> 📋
+      </div>
+    </section>
+
+    <!-- Key Capabilities Highlights -->
+    <section class="features-grid" aria-label="Feature highlights">
+      <div class="feature-card">
+        <span class="feature-icon">👁️</span>
+        <h3 class="feature-title">Spatial Vision</h3>
+        <p class="feature-desc">Real-time object detection, clock-face bearings, and metric distance estimation.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">📖</span>
+        <h3 class="feature-title">OCR Text Reading</h3>
+        <p class="feature-desc">Verbatim text readout for signage, labels, documents, packaging, and screens.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🎙️</span>
+        <h3 class="feature-title">Hands-Free Loop</h3>
+        <p class="feature-desc">Zero-tap conversational voice control with resilient multi-phrase command handling.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🧭</span>
+        <h3 class="feature-title">Continuous Guidance</h3>
+        <p class="feature-desc">Hands-free navigation loop with instant voice cancellation and spatial stereo beacons.</p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="download-footer">
+      <p>Vision Lens • AI for safer, more independent living</p>
+    </footer>
+
+  </div>
+
+  <!-- QR Code Library with Subresource Integrity and Fallback -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+    integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1b4Mp20df05ZXXYsozbTWdzXUL098alcV8lEZhv53wdvo2VWDA=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <script>
+    (function () {
+      // Determine canonical download URL
+      const currentOrigin = window.location.origin || (window.location.protocol + '//' + window.location.host);
+      const downloadPageUrl = currentOrigin + '/download';
+
+      // Update URL display pill
+      const qrUrlText = document.getElementById('qrUrlText');
+      if (qrUrlText) {
+        qrUrlText.textContent = downloadPageUrl;
+      }
+
+      // Render QR Code
+      const qrContainer = document.getElementById('qrCodeContainer');
+      if (qrContainer) {
+        qrContainer.innerHTML = '';
+        if (typeof QRCode !== 'undefined') {
+          try {
+            new QRCode(qrContainer, {
+              text: downloadPageUrl,
+              width: 200,
+              height: 200,
+              colorDark: "#000000",
+              colorLight: "#ffffff",
+              correctLevel: QRCode.CorrectLevel.M
+            });
+          } catch (e) {
+            fallbackQrImage(qrContainer, downloadPageUrl);
+          }
+        } else {
+          fallbackQrImage(qrContainer, downloadPageUrl);
+        }
+      }
+
+      function fallbackQrImage(container, url) {
+        const img = document.createElement('img');
+        img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+        img.alt = 'QR code to download page';
+        img.width = 200;
+        img.height = 200;
+        container.appendChild(img);
+      }
+
+      window.copyDownloadUrl = function () {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(downloadPageUrl).then(() => {
+            if (qrUrlText) {
+              const original = qrUrlText.textContent;
+              qrUrlText.textContent = 'Link copied to clipboard! ✅';
+              setTimeout(() => { qrUrlText.textContent = original; }, 2000);
+            }
+          });
+        }
+      };
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+# Environment Variables
+.env
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual Environments
+venv/
+env/
+.venv/
+
+# Operating System
+.DS_Store
+Thumbs.db
+
+# Android & Gradle
+.gradle/
+android/.gradle/
+**/build/
+*.apk
+!public/*.apk
+!static/*.apk
+*.ap_
+*.aab
+.idea/
+*.iml
+local.properties
