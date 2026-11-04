@@ -11,9 +11,9 @@ Open [`android/app/src/main/java/com/visuallens/app/MainActivity.kt`](file:///c:
 ```kotlin
 companion object {
     /**
-     * PASTE YOUR DEPLOYED VERCEL URL HERE
+     * Vision Lens Verified Production Deployment URL
      */
-    const val WEB_APP_URL = "https://visionlens-gamma.vercel.app"
+    const val WEB_APP_URL = "https://vision-lens-ivory.vercel.app"
     ...
 }
 ```

@@ -44,11 +44,9 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         private const val TAG = "VisualLensApp"
 
         /**
-         * PASTE YOUR DEPLOYED VERCEL URL HERE
-         * Example: "https://visionlens-gamma.vercel.app"
-         * For local testing on Wi-Fi: "http://192.168.1.X:8000"
+         * Vision Lens Verified Production Deployment URL
          */
-        const val WEB_APP_URL = "https://visionlens-gamma.vercel.app"
+        const val WEB_APP_URL = "https://vision-lens-ivory.vercel.app"
 
         private val REQUIRED_PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA,
@@ -180,6 +178,12 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
                 override fun onError(utteranceId: String?) {
                     Log.e(TAG, "TTS speaking error")
+                    sendJsCallback("window.onTTSError && window.onTTSError();")
+                }
+
+                @Deprecated("Deprecated in Java")
+                override fun onError(utteranceId: String?, errorCode: Int) {
+                    Log.e(TAG, "TTS speaking error code: $errorCode")
                     sendJsCallback("window.onTTSError && window.onTTSError();")
                 }
             })

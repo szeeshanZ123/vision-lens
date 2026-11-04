@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Visual Lens</string>
+    <string name="error_connection_title">Unable to Connect</string>
+    <string name="error_connection_msg">Please check your internet connection or verify that the server is running.</string>
+    <string name="btn_retry">Retry</string>
+    <string name="permission_camera_rationale">Camera permission is required for Visual Lens to capture and analyze your environment.</string>
+</resources>

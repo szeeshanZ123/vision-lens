@@ -564,9 +564,14 @@
    */
   function onSpeechFinished() {
     isSpeaking = false;
+    if (speakWatchdogTimer) {
+      clearTimeout(speakWatchdogTimer);
+      speakWatchdogTimer = null;
+    }
     if (speakBtn) speakBtn.classList.remove('hidden');
     if (stopSpeakBtn) stopSpeakBtn.classList.add('hidden');
     window._activeUtterance = null;
+    currentUtterance = null;
 
     if (isContinuousGuidanceActive) {
       setAppState('READY', 'Continuous Guidance Active');
@@ -578,23 +583,27 @@
     }
   }
 
-
-
   /**
-   * Triggers the zero-tap startup greeting
+   * Triggers the zero-tap startup greeting safely
    */
-  function triggerStartupGreeting() {
-    if (hasGreeted || !isZeroTapActive) return;
+  function triggerStartupGreeting(playAudio = false) {
+    if (hasGreeted) return;
     hasGreeted = true;
     const greeting = "Vision Lens is ready. What can I help you with?";
     showVoiceFeedback("Vision Lens Ready", greeting);
-    speak(greeting);
+    if (playAudio && isZeroTapActive) {
+      speak(greeting);
+    }
   }
 
   /**
    * Starts Listening for Voice Commands
    */
   function startVoiceListening() {
+    // If speaking, stop speech first
+    if (isSpeaking) {
+      stopSpeech();
+    }
     if (isAnalyzing && !isContinuousGuidanceActive) return;
 
     if (zeroTapLoopTimer) {
@@ -910,7 +919,6 @@
 
     if (parsed.intent === 'TEXT_READING') {
       showVoiceFeedback('Reading Text', 'Scanning for visible text in view...');
-      speak('Reading text in view...');
       await executeAnalysis({
         query: parsed.query || 'Read all visible text',
         mode: 'text_reading'
@@ -919,7 +927,7 @@
     }
 
     // Single query execution
-    speak('Analyzing...');
+    showVoiceFeedback('Analyzing Scene', parsed.query ? `Analyzing: "${parsed.query}"` : 'Analyzing visible environment...');
     await executeAnalysis({
       query: parsed.query,
       mode: parsed.mode
@@ -939,7 +947,7 @@
       targetSearchBanner.classList.remove('hidden');
     }
 
-    speak(`Searching for ${targetName}...`);
+    showVoiceFeedback(`Finding ${targetName}`, `Searching for ${targetName} in camera view...`);
     executeAnalysis({
       query: originalQuery || `Find ${targetName}`,
       mode: 'find_target',
@@ -1274,14 +1282,13 @@
     } catch (err) {
       console.error('Analysis error:', err);
       if (!isContinuous) {
-        showError('Analysis Failed', err.message || 'Failed to analyze camera frame.');
-        setAppState('READY', 'Analysis Notice');
-        speak('I could not complete the visual analysis. Please try again.');
+        showError('Analysis Notice', err.message || 'Failed to analyze camera frame.');
+        setAppState('READY', '● READY');
       } else {
         setAppState('ANALYZING', 'Guidance Active (Scanning...)');
       }
       if (isZeroTapActive && !isContinuousGuidanceActive) {
-        scheduleZeroTapReArm(2000);
+        scheduleZeroTapReArm(2500);
       }
     } finally {
       setAnalyzingState(false);
@@ -1591,28 +1598,37 @@
       return;
     }
 
-    if (speakWatchdogTimer) {
-      clearTimeout(speakWatchdogTimer);
-      speakWatchdogTimer = null;
-    }
+    // 1. Stop any currently active speech first
+    stopSpeech();
+
+    // 2. Setup universal safety watchdog timer for both Android & Web TTS
+    const wordCount = cleanSpeechText.split(/\s+/).length;
+    const maxExpectedMs = Math.min(15000, Math.max(3000, wordCount * 380 + 2000));
+    speakWatchdogTimer = setTimeout(() => {
+      if (isSpeaking) {
+        console.warn('[TTS Watchdog] Speech timed out, safely concluding speaking state');
+        onSpeechFinished();
+      }
+    }, maxExpectedMs);
 
     isSpeaking = true;
     setAppState('SPEAKING');
+    if (speakBtn) speakBtn.classList.add('hidden');
+    if (stopSpeakBtn) stopSpeakBtn.classList.remove('hidden');
 
-    // 1. Android Native TTS Bridge (in Android APK)
+    // 3. Android Native TTS Bridge (in Android APK)
     if (typeof AndroidTTS !== 'undefined' && AndroidTTS.speak) {
-      stopSpeech();
-      isSpeaking = true;
-      setAppState('SPEAKING');
-      AndroidTTS.speak(cleanSpeechText);
-      return;
+      try {
+        AndroidTTS.speak(cleanSpeechText);
+        return;
+      } catch (err) {
+        console.warn('AndroidTTS error, falling back to browser speech:', err);
+      }
     }
 
-    // 2. Browser Web Speech Synthesis API
+    // 4. Browser Web Speech Synthesis API
     if (synth) {
       try {
-        stopSpeech();
-
         if (synth.paused) {
           synth.resume();
         }
@@ -1645,18 +1661,10 @@
         };
 
         utterance.onend = () => {
-          if (speakWatchdogTimer) {
-            clearTimeout(speakWatchdogTimer);
-            speakWatchdogTimer = null;
-          }
           onSpeechFinished();
         };
 
         utterance.onerror = (e) => {
-          if (speakWatchdogTimer) {
-            clearTimeout(speakWatchdogTimer);
-            speakWatchdogTimer = null;
-          }
           onSpeechFinished();
           if (e && e.error && e.error !== 'interrupted' && e.error !== 'canceled') {
             console.warn('SpeechSynthesis error, falling back to server TTS:', e.error);
@@ -1664,20 +1672,9 @@
           }
         };
 
-        // Safety watchdog: ensure browser TTS finishes even if onend event is dropped
-        const wordCount = cleanSpeechText.split(' ').length;
-        const maxExpectedMs = Math.max(3500, wordCount * 500 + 1500);
-        speakWatchdogTimer = setTimeout(() => {
-          if (isSpeaking) {
-            console.log('[TTS Watchdog] Force concluding speech after timeout');
-            onSpeechFinished();
-          }
-        }, maxExpectedMs);
-
         // Keep window-level reference to prevent GC disposal mid-speech in Chromium
         window._activeUtterance = utterance;
         currentUtterance = utterance;
-        isSpeaking = true;
         synth.speak(utterance);
         return;
       } catch (e) {
@@ -1685,14 +1682,12 @@
       }
     }
 
-    // 3. Server-side TTS Fallback (/api/speak or /speak)
+    // 5. Server-side TTS Fallback (/api/speak or /speak)
     fallbackServerSpeak(cleanSpeechText);
   }
 
   function fallbackServerSpeak(textToSpeak) {
     try {
-      isSpeaking = true;
-      setAppState('SPEAKING');
       fetch('/api/speak', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1704,16 +1699,8 @@
           body: JSON.stringify({ text: textToSpeak }),
         }).catch((e) => console.warn('Server TTS dispatch error:', e));
       });
-
-      // Estimated duration fallback
-      const wordCount = (textToSpeak || '').split(' ').length;
-      const durationMs = Math.max(2000, wordCount * 360);
-      setTimeout(() => {
-        if (isSpeaking) onSpeechFinished();
-      }, durationMs);
     } catch (err) {
       console.warn('Could not dispatch server TTS:', err);
-      onSpeechFinished();
     }
   }
 
@@ -1735,6 +1722,8 @@
     }
     if (speakBtn) speakBtn.classList.remove('hidden');
     if (stopSpeakBtn) stopSpeakBtn.classList.add('hidden');
+    window._activeUtterance = null;
+    currentUtterance = null;
   }
 
   function setAnalyzingState(busy) {
@@ -1888,12 +1877,6 @@
   window.addEventListener('DOMContentLoaded', () => {
     initSpeechEngine();
     initCamera('environment');
-
-    // Startup fallback announcement if camera initialization takes a moment
-    setTimeout(() => {
-      if (!hasGreeted && isZeroTapActive && (!currentStream || !video || !video.videoWidth)) {
-        speak("Vision Lens is starting. Please wait.");
-      }
-    }, 2200);
+    showVoiceFeedback("Vision Lens Ready", "Point camera and tap Capture or use voice commands.");
   });
 })();

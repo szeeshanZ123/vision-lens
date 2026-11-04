@@ -105,14 +105,12 @@ class GeminiService:
     """Service to interact with Google Gemini Vision models with Spatial Reasoning."""
 
     # Default to ultra-fast low-latency multimodal model
-    DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+    DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
     FALLBACK_MODELS = [
-        "gemini-3.6-flash",
-        "gemini-3.5-flash",
-        "gemini-3.5-flash-lite",
-        "gemini-3.1-flash-lite",
-        "gemini-3.1-pro-preview",
-        "gemini-flash-latest",
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
     ]
 
     def __init__(self, api_key: Optional[str] = None):

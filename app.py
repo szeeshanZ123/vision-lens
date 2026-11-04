@@ -180,10 +180,10 @@ async def analyze_frame(payload: AnalyzeRequest):
     # 1. Check API Key configuration
     if not gemini_service.is_configured():
         return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             content=AnalyzeResponse(
                 success=False,
-                error="Gemini API Key is not configured. Please add GEMINI_API_KEY to your .env file."
+                error="Vision AI service is unavailable. Please ensure GEMINI_API_KEY is configured in the server deployment environment."
             ).model_dump()
         )
 

@@ -9,25 +9,34 @@ from typing import Optional
 
 logger = logging.getLogger("speech_service")
 
+
 class SpeechService:
-    """Manages Python-side Text-to-Speech synthesis."""
+    """Manages Python-side Text-to-Speech synthesis with lazy initialization."""
 
     def __init__(self):
         self._engine = None
         self._lock = threading.Lock()
-        self._init_engine()
+        self._initialized = False
 
-    def _init_engine(self):
-        try:
-            import pyttsx3
-            self._engine = pyttsx3.init()
-            # Set speech rate and volume for clear accessibility
-            self._engine.setProperty("rate", 160)
-            self._engine.setProperty("volume", 1.0)
-            logger.info("Python pyttsx3 TTS engine initialized successfully.")
-        except Exception as e:
-            logger.warning(f"Python pyttsx3 TTS could not initialize (client browser SpeechSynthesis will be used): {e}")
-            self._engine = None
+    def _ensure_engine(self):
+        if self._initialized:
+            return self._engine
+        with self._lock:
+            if not self._initialized:
+                try:
+                    import pyttsx3
+                    self._engine = pyttsx3.init()
+                    self._engine.setProperty("rate", 160)
+                    self._engine.setProperty("volume", 1.0)
+                    logger.info("Python pyttsx3 TTS engine initialized successfully.")
+                except Exception as e:
+                    logger.warning(
+                        f"Python pyttsx3 TTS could not initialize (client browser SpeechSynthesis will be used): {e}"
+                    )
+                    self._engine = None
+                finally:
+                    self._initialized = True
+        return self._engine
 
     def speak(self, text: str, block: bool = False) -> bool:
         """
@@ -40,14 +49,15 @@ class SpeechService:
         Returns:
             bool indicating if speech command was dispatched
         """
-        if not text or not self._engine:
+        engine = self._ensure_engine()
+        if not text or not engine:
             return False
 
         def _run():
             with self._lock:
                 try:
-                    self._engine.say(text)
-                    self._engine.runAndWait()
+                    engine.say(text)
+                    engine.runAndWait()
                 except Exception as err:
                     logger.error(f"Error during pyttsx3 speech synthesis: {err}")
 
